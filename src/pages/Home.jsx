@@ -145,7 +145,7 @@ const Home = () => {
           {/* Cart Content */}
           <div className="flex flex-col h-full">
             {/* Scrollable Cart Items */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 pb-24">
               {cart.length === 0 ? (
                 <p className="text-gray-600 text-center py-8">Pesanan kosong</p>
               ) : (
@@ -158,7 +158,7 @@ const Home = () => {
             </div>
 
             {/* Fixed Cart Summary */}
-            <div className="border-t bg-white p-4">
+            <div className="border-t bg-white p-4 absolute bottom-0 left-0 right-0">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold">
                   Total: Rp {getTotalPrice().toLocaleString()}

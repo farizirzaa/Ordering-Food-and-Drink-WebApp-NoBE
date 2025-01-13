@@ -2,22 +2,21 @@ import React, { useState, useEffect } from 'react';
 import MenuItem from '../components/MenuItem';
 import CartItem from '../components/CartItem';
 import { useNavigate, useLocation } from 'react-router-dom';
-import '../styles.css'; // Impor CSS kustom
+import '../styles.css';
 
 const Home = () => {
   const [cart, setCart] = useState([]);
-  const [filter, setFilter] = useState('Semua Menu'); // Menyimpan filter yang dipilih
+  const [filter, setFilter] = useState('Semua Menu');
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Ambil data cart dari state (jika ada)
   useEffect(() => {
     if (location.state && location.state.cart) {
       setCart(location.state.cart);
     }
   }, [location.state]);
 
-  // Daftar menu dengan kategori
   const menuItems = [
     { id: 1, name: 'Sate Ayam', description: 'Sate ayam bumbu kacang', price: 25000, category: 'Makanan', imageUrl: '/img/sateayam.jpeg' },
     { id: 2, name: 'Ayam Geprek', description: 'Ayam geprek', price: 20400, category: 'Makanan', imageUrl: '/img/ayamgeprek.png' },
@@ -68,41 +67,120 @@ const Home = () => {
       alert('Keranjang kosong. Tambahkan item terlebih dahulu!');
       return;
     }
-
     navigate('/payment', { state: { paymentMethod: method, totalPrice, cart } });
   };
 
+  // Toggle mobile cart visibility
+  const toggleMobileCart = () => {
+    setIsMobileCartOpen(!isMobileCartOpen);
+  };
+
   return (
-    <div className="layout">
-      <main className="flex-1 p-6 flex flex-col">
-        <h3 className="sub-header">Pilihan Menu</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMenuItems.map((item) => (
-            <MenuItem key={item.id} item={item} addToCart={addToCart} />
-          ))}
-        </div>
-      </main>
-
-      <aside className="sidebar">
-        <h2 className='sub-title'>Pesanan Anda</h2>
-        <div className="cart-list-container">
-          {cart.length === 0 ? (
-            <p className="text-gray-600 font-semibold text-center">Pesanan kosong</p>
-          ) : (
-            <ul className="cart-list">
-              {cart.map((item) => (
-                <CartItem key={item.id} item={item} />
-              ))}
-            </ul>
+    <div className="min-h-screen bg-gray-100">
+      {/* Mobile Cart Toggle Button - Only visible on mobile */}
+      <div className="fixed bottom-4 right-4 md:hidden z-50">
+        <button 
+          onClick={toggleMobileCart}
+          className="bg-blue-600 text-white rounded-full p-4 shadow-lg flex items-center justify-center"
+        >
+          <span className="mr-2">🛒</span>
+          {cart.length > 0 && (
+            <span className="bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+              {cart.length}
+            </span>
           )}
-        </div>
+        </button>
+      </div>
 
-        <div className="cart-summary">
-          <h3 id='total' className='font-semibold'>Total: Rp {getTotalPrice().toLocaleString()}</h3>
-          <button onClick={() => handlePayment('QRIS')} className="button button-primary" id='buttoncheckout'>Pembayaran QRIS</button>
-          <button onClick={() => handlePayment('Tunai')} className="button button-secondary " id='buttoncheckout'>Pembayaran Tunai</button>
-        </div>
-      </aside>
+      {/* Main Layout Container */}
+      <div className="flex flex-col md:flex-row min-h-screen">
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 md:p-6">
+          {/* Category Filter */}
+          <div className="mb-6 overflow-x-auto whitespace-nowrap pb-2">
+            <div className="flex space-x-2">
+              {['Semua Menu', 'Makanan', 'Minuman'].map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setFilter(category)}
+                  className={`px-4 py-2 rounded-full text-sm ${
+                    filter === category
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Menu Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredMenuItems.map((item) => (
+              <MenuItem key={item.id} item={item} addToCart={addToCart} />
+            ))}
+          </div>
+        </main>
+
+        {/* Cart Sidebar - Hidden on mobile unless toggled */}
+        <aside className={`
+          fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-lg
+          transform transition-transform duration-300 ease-in-out
+          ${isMobileCartOpen ? 'translate-x-0' : 'translate-x-full'}
+          md:relative md:translate-x-0
+          z-40
+        `}>
+          {/* Mobile Cart Header */}
+          <div className="md:hidden flex justify-between items-center p-4 border-b">
+            <h2 className="text-lg font-semibold">Pesanan Anda</h2>
+            <button 
+              onClick={toggleMobileCart}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Cart Content */}
+          <div className="h-full flex flex-col p-4">
+            <div className="flex-1 overflow-y-auto">
+              {cart.length === 0 ? (
+                <p className="text-gray-600 text-center py-8">Pesanan kosong</p>
+              ) : (
+                <ul className="space-y-4">
+                  {cart.map((item) => (
+                    <CartItem key={item.id} item={item} />
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Cart Summary */}
+            <div className="mt-4 pt-4 border-t">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold">
+                  Total: Rp {getTotalPrice().toLocaleString()}
+                </h3>
+              </div>
+              <div className="space-y-2">
+                <button
+                  onClick={() => handlePayment('QRIS')}
+                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Pembayaran QRIS
+                </button>
+                <button
+                  onClick={() => handlePayment('Tunai')}
+                  className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300"
+                >
+                  Pembayaran Tunai
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 };
